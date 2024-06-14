@@ -1,13 +1,19 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 )
 
-const listenAddr = ":9090"
-
 func main() {
+	addr := flag.String("addr", ":9090", "HTTP network address")
+	flag.Parse()
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.LstdFlags)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
@@ -17,7 +23,7 @@ func main() {
 	mux.HandleFunc("GET /snippet/view", snippetView)
 	mux.HandleFunc("POST /snippet/create", snippetCreate)
 
-	log.Println("Starting server on", listenAddr)
-	err := http.ListenAndServe(listenAddr, mux)
-	log.Fatal(err)
+	infoLog.Println("Starting server on", *addr)
+	err := http.ListenAndServe(*addr, mux)
+	errorLog.Fatal(err)
 }
