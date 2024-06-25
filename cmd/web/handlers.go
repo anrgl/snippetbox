@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/anrgl/snippetbox/internal/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -37,8 +40,18 @@ func (app application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"message": "Display specific snippet with ID %d..."}`, id)
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 func (app application) snippetCreate(w http.ResponseWriter, r *http.Request) {
